@@ -34,10 +34,10 @@ typedef struct {
 
 typedef enum {
   MIME_TEXT_HTML = 0,
-  /*MIME_TEXT_PLAIN,*/
-  /*MIME_TEXT_CSS,*/
-  /*MIME_TEXT_JAVASCRIPT,*/
+  MIME_TEXT_CSS,
+  MIME_TEXT_JAVASCRIPT,
   MIME_IMAGE_PNG,
+  /*MIME_TEXT_PLAIN,*/
   /*MIME_IMAGE_JPEG,*/
   /*MIME_IMAGE_GIF,*/
   /*MIME_IMAGE_SVG,*/
@@ -61,6 +61,7 @@ typedef enum {
 } HttpStatusCode;
 
 // HttpRequest
+void init_http_request(HttpRequest *hr);
 void parse_request(HttpRequest *hr, char *request);
 void process_request(HttpRequest *hr, int client_socket);
 void print_http_request(HttpRequest *hr);
@@ -68,7 +69,6 @@ void free_http_request(HttpRequest *hr);
 char *resolve_path(const char *path);
 
 // Headers
-void init_headers(Headers *hs);
 void add_header(Headers *hs, const char *key, const char *value);
 char *get_header(Headers *hs, const char *key);
 void print_headers(Headers *hs);

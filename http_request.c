@@ -7,11 +7,11 @@
 #include <sys/socket.h>
 
 const char *supported_mime_types[] = {
-    "text/html", // MIME_TEXT_HTML
-    // "text/plain",              // MIME_TEXT_PLAIN
-    // "text/css",                // MIME_TEXT_CSS
-    // "text/javascript",         // MIME_TEXT_JAVASCRIPT
-    "image/png", // MIME_IMAGE_PNG
+    "text/html",       // MIME_TEXT_HTML
+    "text/css",        // MIME_TEXT_CSS
+    "text/javascript", // MIME_TEXT_JAVASCRIPT
+    "image/png",       // MIME_IMAGE_PNG
+                       // "text/plain",              // MIME_TEXT_PLAIN
     // "image/jpeg",              // MIME_IMAGE_JPEG
     // "image/gif",               // MIME_IMAGE_GIF
     // "image/svg+xml",           // MIME_IMAGE_SVG
@@ -75,7 +75,8 @@ void parse_request(HttpRequest *hr, char *request) {
   }
 
   if (strcmp(hr->start_line.target.file_name, "") == 0) {
-    hr->start_line.target.file_name = "index.html";
+    free(hr->start_line.target.file_name);
+    hr->start_line.target.file_name = strdup("index.html");
   }
 
   free(start_line_copy);
@@ -102,7 +103,7 @@ void parse_request(HttpRequest *hr, char *request) {
       }
 
       if (strlen(key) > 0 && strlen(value) > 0) {
-        add_header(&hr->headers, strdup(key), strdup(value));
+        add_header(&hr->headers, key, value);
       }
     }
   }
@@ -139,12 +140,14 @@ void handle_response(int client_socket, HttpStatusCode http_sc) {
 }
 
 void handle_file(int client_socket, Target *target, MimeType mime_type) {
+  log_message(LOG_INFO, "Handling file %s with type %d", target->file_name, mime_type);
   const char *resources_path = resolve_path(target->path);
   const char *file = find_file_in_directory(resources_path, target->file_name);
 
   if (file == NULL) {
     log_message(LOG_ERROR, "File not found\n");
     handle_response(client_socket, HTTP_404_NOT_FOUND);
+    return;
   }
 
   long file_size;
@@ -154,6 +157,7 @@ void handle_file(int client_socket, Target *target, MimeType mime_type) {
   if (data == NULL) {
     log_message(LOG_ERROR, "Failed to load file %s", file);
     handle_response(client_socket, HTTP_404_NOT_FOUND);
+    free((void *)file);
     return;
   }
 
@@ -168,11 +172,13 @@ void handle_file(int client_socket, Target *target, MimeType mime_type) {
   // Send header
   if (send(client_socket, header, strlen(header), 0) < 0) {
     log_message(LOG_ERROR, "Sending image header");
+    free((void *)file);
     return;
   }
 
   // Send data
   send(client_socket, data, file_size, 0);
+  free((void *)file);
   free(data);
 }
 
@@ -181,22 +187,28 @@ void process_request(HttpRequest *hr, int client_socket) {
     char *accept_header = get_header(&hr->headers, "Accept");
     const char *best_mime = determine_best_mime(accept_header);
 
+    printf("MIME TYPE: %s\n", best_mime);
     if (best_mime == NULL) {
       handle_response(client_socket, HTTP_415_UNSUPPORTED);
+      free(accept_header);
+      return;
     }
 
     MimeType mime_type = get_mime_type_from_string(best_mime);
 
     switch (mime_type) {
     case MIME_TEXT_HTML:
+    case MIME_TEXT_CSS:
     case MIME_IMAGE_PNG:
+    case MIME_TEXT_JAVASCRIPT:
       handle_file(client_socket, &hr->start_line.target, mime_type);
       break;
     case MIME_UNKNOWN:
     default:
       handle_response(client_socket, HTTP_415_UNSUPPORTED);
     }
-    return;
+
+    free(accept_header);
   }
 }
 
@@ -208,18 +220,30 @@ void print_http_request(HttpRequest *hr) {
 void free_http_request(HttpRequest *hr) {
   free_start_line(&hr->start_line);
   free_headers(&hr->headers);
+  memset(hr, 0, sizeof(HttpRequest));
 }
 
-void init_headers(Headers *hs) {
-  hs->items = malloc(INITIAL_CAPACITY * sizeof(Header));
-  hs->capacity = INITIAL_CAPACITY;
-  hs->count = 0;
+void init_http_request(HttpRequest *hr) {
+  // Start line
+  hr->start_line.version = NULL;
+  memset(&hr->start_line.target, 0, sizeof(Target));
+  hr->start_line.method = NULL;
+
+  // Headers
+  hr->headers.items = malloc(INITIAL_CAPACITY * sizeof(Header));
+  hr->headers.capacity = INITIAL_CAPACITY;
+  hr->headers.count = 0;
 }
 
 void add_header(Headers *hs, const char *key, const char *value) {
   if (hs->count >= hs->capacity) {
     hs->capacity *= 2;
-    hs->items = realloc(hs->items, hs->capacity * sizeof(Header));
+    Header *new_items = realloc(hs->items, hs->capacity * sizeof(Header));
+    if (!new_items) {
+      log_message(LOG_ERROR, "Failed to add new header");
+      exit(EXIT_FAILURE);
+    }
+    hs->items = new_items;
   }
   hs->items[hs->count].key = strdup(key);
   hs->items[hs->count].value = strdup(value);
@@ -253,16 +277,21 @@ void print_headers(Headers *hs) {
 }
 
 void free_headers(Headers *hs) {
+  for (size_t i = 0; i < hs->count; i++) {
+    free(hs->items[i].key);
+    free(hs->items[i].value);
+  }
   free(hs->items);
+  hs->items = NULL;
   hs->count = 0;
   hs->capacity = INITIAL_CAPACITY;
 }
 
 void free_start_line(StartLine *sl) {
-  sl->method = NULL;
-  sl->target.path = NULL;
-  sl->target.file_name = NULL;
-  sl->version = NULL;
+  free(sl->method);
+  free(sl->target.path);
+  free(sl->target.file_name);
+  free(sl->version);
 }
 
 void print_start_line(StartLine *sl) {
@@ -279,12 +308,12 @@ const char *get_mime_type(MimeType type) {
     return "text/html";
   case MIME_IMAGE_PNG:
     return "image/png";
+  case MIME_TEXT_CSS:
+    return "text/css";
+  case MIME_TEXT_JAVASCRIPT:
+    return "text/javascript";
   // case MIME_TEXT_PLAIN:
   //   return "text/plain";
-  // case MIME_TEXT_CSS:
-  //   return "text/css";
-  // case MIME_TEXT_JAVASCRIPT:
-  //   return "text/javascript";
   // case MIME_IMAGE_JPEG:
   //   return "image/jpeg";
   // case MIME_IMAGE_GIF:
@@ -311,12 +340,12 @@ MimeType get_mime_type_from_string(const char *mime_string) {
     return MIME_TEXT_HTML;
   if (strcmp(mime_string, "image/png") == 0)
     return MIME_IMAGE_PNG;
+  if (strcmp(mime_string, "text/css") == 0)
+    return MIME_TEXT_CSS;
+  if (strcmp(mime_string, "text/javascript") == 0)
+    return MIME_TEXT_JAVASCRIPT;
   // if (strcmp(mime_string, "text/plain") == 0)
   //   return MIME_TEXT_PLAIN;
-  // if (strcmp(mime_string, "text/css") == 0)
-  //   return MIME_TEXT_CSS;
-  // if (strcmp(mime_string, "text/javascript") == 0)
-  //   return MIME_TEXT_JAVASCRIPT;
   // if (strcmp(mime_string, "image/jpeg") == 0)
   //   return MIME_IMAGE_JPEG;
   // if (strcmp(mime_string, "image/gif") == 0)

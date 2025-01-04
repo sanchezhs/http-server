@@ -1,8 +1,25 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html>
-<body>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetris</title>
+    <link rel="stylesheet" href="/styles/main.css">
+  </head>
+  <body>
 
-<h1>Hello, World</h1>
-
-</body>
-</html> 
+<div class="container">
+    <div class="score-board">
+      <div class="score-display">
+        <p id="score">0</p>
+      </div>
+        <div>
+          <button id="restartBtn" class="gameBtn">Restart</button>
+          <button id="pauseBtn" class="gameBtn">Pause</button>
+        </div>
+    </div>
+    <canvas id="canvas" width="300" height="600"></canvas>
+  </div>
+    <script src="/scripts/main.js"></script>
+  </body>
+</html>

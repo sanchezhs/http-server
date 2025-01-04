@@ -49,10 +49,6 @@ int initialize_socket() {
 }
 
 int main(void) {
-
-  HttpRequest hr = {0};
-  init_headers(&hr.headers);
-
   int socketfd = initialize_socket();
   char buffer[1024] = {0};
 
@@ -80,6 +76,9 @@ int main(void) {
     }
     buffer[bytes_read] = '\0';
 
+    HttpRequest hr = {0};
+    init_http_request(&hr);
+
     // Parse request
     parse_request(&hr, buffer);
 
@@ -94,6 +93,7 @@ int main(void) {
     // Close connection
     shutdown(new_socket, SHUT_WR);
     close(new_socket);
+
     free_http_request(&hr);
   }
 
