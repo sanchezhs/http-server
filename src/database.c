@@ -62,7 +62,6 @@ bool sql_search_username(const char *username, const char *password)
 {
     sqlite3 *db;
     sqlite3_stmt *stmt;
-    char *err_msg = 0;
     int rc = sqlite3_open(DB_PATH, &db);
 
     if (rc)
@@ -90,7 +89,7 @@ bool sql_search_username(const char *username, const char *password)
         const unsigned char *db_username = sqlite3_column_text(stmt, 1);
         const unsigned char *db_password = sqlite3_column_text(stmt, 2);
 
-        if (strcmp(db_username, username) == 0 && strcmp(db_password, password) == 0)
+        if (strcmp((char*)db_username, username) == 0 && strcmp((char*)db_password, password) == 0)
         {
             break;
         }

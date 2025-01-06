@@ -12,6 +12,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+static int PORT = 8080;
 
 int initialize_socket() {
   // 1. Create socket
@@ -50,11 +51,27 @@ int initialize_socket() {
   return socketfd;
 }
 
-int main(void) {
-  create_database();
+void initialize_database() {
+  if (!create_database())
+    log_message(LOG_ERROR, "Failed to create database");
+
   create_table("User", "id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT");
   create_table("UserScore", "user_id INTEGER, username TEXT, score INTEGER, timestamp INTEGER");
+}
 
+void read_cli(int *argc, char ***argv) {
+  char* program = shift_args(argc, argv);
+  if (*argc != 1) {
+    log_message(LOG_WARNING, "No port specified, using default port %d", PORT);
+  } else {
+    PORT = atoi((*argv)[0]);
+  }
+}
+
+int main(int argc, char *argv[]) {
+  read_cli(&argc, &argv);
+
+  initialize_database();
   int socketfd = initialize_socket();
   char buffer[1024] = {0};
 

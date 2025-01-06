@@ -31,6 +31,7 @@ Options:
 
 // Log levels
 #define LOG_INFO "INFO"
+#define LOG_WARNING "WARNING"
 #define LOG_ERROR "ERROR"
 
 // Macro for logging
@@ -59,14 +60,17 @@ Options:
 #endif
 
 // Function declarations
-UTILS_DEF void log_message(const char *level, const char *format, ...);
-UTILS_DEF unsigned char *
-read_entire_file(const char *directory, const char *file_path, long *file_size);
-UTILS_DEF char *find_file_in_directory(const char *target_dir,
-                                       const char *target_file);
 
-UTILS_DEF bool write_file(const char *file_path, const unsigned char *data,
-                          long data_size);
+// Logging
+UTILS_DEF void log_message(const char *level, const char *format, ...);
+
+// File I/O
+UTILS_DEF unsigned char * read_entire_file(const char *directory, const char *file_path, long *file_size);
+UTILS_DEF char *find_file_in_directory(const char *target_dir, const char *target_file);
+UTILS_DEF bool write_file(const char *file_path, const unsigned char *data, long data_size);
+
+// CLI Utilities
+UTILS_DEF char* shift_args(int *argc, char ***argv);
 
 #ifdef UTILS_LOG_IMPLEMENTATION
 
@@ -140,33 +144,6 @@ UTILS_DEF unsigned char *read_entire_file(const char *directory,
   return data;
 }
 
-/*UTILS_DEF unsigned char *read_entire_file(const char *file_path,*/
-/*                                          long *file_size) {*/
-/*  FILE *f = fopen(file_path, "rb");*/
-/*  if (!f) {*/
-/*    return NULL;*/
-/*  }*/
-/**/
-/*  fseek(f, 0, SEEK_END);*/
-/*  *file_size = ftell(f);*/
-/*  rewind(f);*/
-/**/
-/*  unsigned char *data = malloc(*file_size);*/
-/*  if (!data) {*/
-/*    fclose(f);*/
-/*    return NULL;*/
-/*  }*/
-/**/
-/*  if (fread(data, 1, *file_size, f) != (size_t)*file_size) {*/
-/*    free(data);*/
-/*    fclose(f);*/
-/*    return NULL;*/
-/*  }*/
-/*  fclose(f);*/
-/**/
-/*  return data;*/
-/*}*/
-
 char *find_file_in_directory(const char *target_dir, const char *target_file) {
   DIR *directory;
   struct dirent *entry;
@@ -191,6 +168,17 @@ char *find_file_in_directory(const char *target_dir, const char *target_file) {
 
   closedir(directory);
   return found_file;
+}
+
+UTILS_DEF char* shift_args(int *argc, char ***argv) {
+  if (*argc == 0) {
+    return NULL;
+  }
+  char *arg = **argv;
+  (*argc)--;
+  (*argv)++;
+
+  return arg;
 }
 
 #endif // UTILS_LOG_IMPLEMENTATION

@@ -4,7 +4,6 @@
 #define GET "GET"
 #define POST "POST"
 #define INITIAL_CAPACITY 10
-#define PORT 8080
 #define RES_DIR "./resources"
 
 typedef struct {
