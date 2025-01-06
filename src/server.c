@@ -1,15 +1,17 @@
 #include <dirent.h>
 #define UTILS_LOG_IMPLEMENTATION
+#include "cJSON.h"
 #include "http_request.h"
 #include "utils.h"
+#include "database.h"
 #include <asm-generic/socket.h>
 #include <netinet/in.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+
 
 int initialize_socket() {
   // 1. Create socket
@@ -41,7 +43,7 @@ int initialize_socket() {
     log_message(LOG_ERROR, "Bind error");
 
   // 5. Listen for conexions
-  log_message(LOG_INFO, "Listening on %d", PORT);
+  log_message(LOG_INFO, "Listening on http://localhost:%d", PORT);
   if (listen(socketfd, 5) == -1)
     log_message(LOG_ERROR, "Listen error");
 
@@ -49,18 +51,16 @@ int initialize_socket() {
 }
 
 int main(void) {
+  create_database();
+  create_table("User", "id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT UNIQUE, password TEXT");
+  create_table("UserScore", "user_id INTEGER, username TEXT, score INTEGER, timestamp INTEGER");
+
   int socketfd = initialize_socket();
   char buffer[1024] = {0};
 
   int new_socket;
   struct sockaddr peer_addr = {0};
   socklen_t peer_addr_len = sizeof(peer_addr);
-
-  const char *response = "HTTP/1.1 200 OK\r\n"
-                         "Content-Type: text/plain\r\n"
-                         "Content-Length: 13\r\n"
-                         "\r\n"
-                         "Hello, world!";
 
   while (true) {
     if ((new_socket = accept(socketfd, &peer_addr, &peer_addr_len)) < 0) {
@@ -86,9 +86,6 @@ int main(void) {
     process_request(&hr, new_socket);
     print_http_request(&hr);
     printf("\n%s\n", buffer);
-
-    // Send response
-    send(new_socket, response, strlen(response), 0);
 
     // Close connection
     shutdown(new_socket, SHUT_WR);

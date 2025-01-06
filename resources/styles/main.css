@@ -88,4 +88,83 @@ canvas {
   transform: scale(0.95);
 }
 
+.hidden {
+  display: none;
+}
 
+/* Estilo para el contenedor de autenticación */
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+/* Tabs para alternar entre login y registro */
+.tabs {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 10px 20px;
+  margin: 0 5px;
+  background: #2a2a40;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  color: #d0d0d0;
+}
+
+.tab.active {
+  color: #4ca3dd;
+}
+
+/* Formularios */
+.auth-form {
+  background: #1e1e2f;
+  padding: 20px 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 300px;
+}
+
+.auth-form.hidden {
+  display: none;
+}
+
+.auth-form h2 {
+  margin-bottom: 20px;
+  color: #d0d0d0;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #4ca3dd;
+  border-radius: 5px;
+  background: #2a2a40;
+  color: #d0d0d0;
+}
+
+.auth-form button {
+  width: 100%;
+  padding: 10px;
+  background: #4ca3dd;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s ease;
+}
+
+.auth-form button:hover {
+  background: #3a8ec0;
+}

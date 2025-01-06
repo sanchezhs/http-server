@@ -88,6 +88,7 @@ let isArrowLeftPressed = false;
 let isArrowRightPressed = false;
 let isRotatePressed = false;
 let paused = false;
+let loggedIn = false;
 
 function drawBlock(x, y, color) {
   const blockPadding = 1;
@@ -466,11 +467,24 @@ function draw() {
   }
 }
 
+function sendScore() {
+  fetch("http://localhost:8080/score", {
+    method: "POST",
+    body: JSON.stringify({
+      score: score,
+    }),
+    headers: {
+      "Content-type": "application/json; charset=UTF-8"
+    }
+  });
+}
+
 function update(timestamp) {
   if (!paused) {
 
     if (gameOver) {
       draw();
+      sendScore();
       return;
     }
 
@@ -524,11 +538,106 @@ function update(timestamp) {
   }
 }
 
+function register() {
+  const registerForm = document.getElementById("registerForm");
+  registerForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const username = document.getElementById("registerUsername").value;
+    const password = document.getElementById("registerPassword").value;
+    const confirmPassword = document.getElementById("confirmPassword").value;
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    fetch("http://localhost:8080/register", {
+      method: "POST",
+      body: JSON.stringify({
+        username: username,
+        password: password
+      }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }).then(response => {
+      if (response.ok) {
+        // document.getElementById("register").style.display = "none";
+        // document.getElementById("login").style.display = "block";
+        alert("User registered successfully");
+      } else {
+        alert("Username already exists");
+      }
+    });
+  });
+}
+
+function login() {
+  const loginForm = document.getElementById("loginForm");
+  loginForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const username = document.getElementById("loginUsername").value;
+    const password = document.getElementById("loginPassword").value;
+
+    fetch("http://localhost:8080/login", {
+      method: "POST",
+      body: JSON.stringify({
+        username: username,
+        password: password
+      }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }).then(response => {
+      if (response.ok) {
+        document.getElementById("authContainer").style.display = "none";
+        document.getElementById("gameContainer").classList.remove("hidden");
+        loggedIn = true; loggedIn = true;
+        startGame();
+      } else if (response.status == 404) {
+        alert(`User "${username}" not found or password is incorrect`);
+      }
+    });
+  });
+}
+
+function addAuthListeners() {
+  login();
+  register();
+}
+
+function startGame() {
+  if (loggedIn) {
+    currentPiece = createPiece();
+    draw();
+    updateScore();
+    addListeners();
+    requestAnimationFrame(update);
+  }
+}
+
 window.addEventListener("load", () => {
-  currentPiece = createPiece();
-  draw();
-  updateScore();
-  addListeners();
-  requestAnimationFrame(update);
+  addAuthListeners();
+  startGame();
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  const loginTab = document.getElementById("loginTab");
+  const registerTab = document.getElementById("registerTab");
+  const loginForm = document.getElementById("loginForm");
+  const registerForm = document.getElementById("registerForm");
+
+  loginTab.addEventListener("click", () => {
+    loginTab.classList.add("active");
+    registerTab.classList.remove("active");
+    loginForm.classList.remove("hidden");
+    registerForm.classList.add("hidden");
+  });
+
+  registerTab.addEventListener("click", () => {
+    registerTab.classList.add("active");
+    loginTab.classList.remove("active");
+    registerForm.classList.remove("hidden");
+    loginForm.classList.add("hidden");
+  });
+});

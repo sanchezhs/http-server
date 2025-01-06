@@ -1,25 +1,52 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tetris</title>
-    <link rel="stylesheet" href="/styles/main.css">
-  </head>
-  <body>
 
-<div class="container">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tetris</title>
+  <link rel="stylesheet" href="/styles/main.css">
+</head>
+
+<body>
+
+  <div id="gameContainer" class="container hidden">
     <div class="score-board">
       <div class="score-display">
         <p id="score">0</p>
       </div>
-        <div>
-          <button id="restartBtn" class="gameBtn">Restart</button>
-          <button id="pauseBtn" class="gameBtn">Pause</button>
-        </div>
+      <div>
+        <button id="restartBtn" class="gameBtn">Restart</button>
+        <button id="pauseBtn" class="gameBtn">Pause</button>
+      </div>
     </div>
     <canvas id="canvas" width="300" height="600"></canvas>
   </div>
-    <script src="/scripts/main.js"></script>
-  </body>
+
+  <div id="authContainer" class="auth-container">
+    <div class="tabs">
+      <button id="loginTab" class="tab active">Login</button>
+      <button id="registerTab" class="tab">Register</button>
+    </div>
+
+    <div class="auth-forms">
+      <form id="loginForm" class="auth-form">
+        <input placeholder="Username" type="text" id="loginUsername" name="username" required>
+        <input placeholder="Password" type="password" id="loginPassword" name="password" required>
+        <button type="submit">Login</button>
+      </form>
+
+      <form id="registerForm" class="auth-form hidden">
+        <input placeholder="Username" type="text" id="registerUsername" name="username" required>
+        <input placeholder="Password" type="password" id="registerPassword" name="password" required>
+        <input placeholder="Confirm Password" type="password" id="confirmPassword" name="confirm_password" required>
+        <button type="submit">Register</button>
+      </form>
+    </div>
+  </div>
+  
+
+  <script src="/scripts/main.js"></script>
+</body>
+
 </html>

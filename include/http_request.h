@@ -1,6 +1,8 @@
+#include "cJSON.h"
 #include <stdlib.h>
 
 #define GET "GET"
+#define POST "POST"
 #define INITIAL_CAPACITY 10
 #define PORT 8080
 #define RES_DIR "./resources"
@@ -30,6 +32,7 @@ typedef struct {
 typedef struct {
   StartLine start_line;
   Headers headers;
+  cJSON *body;
 } HttpRequest;
 
 typedef enum {
@@ -37,12 +40,12 @@ typedef enum {
   MIME_TEXT_CSS,
   MIME_TEXT_JAVASCRIPT,
   MIME_IMAGE_PNG,
+  MIME_APPLICATION_JSON,
   /*MIME_TEXT_PLAIN,*/
   /*MIME_IMAGE_JPEG,*/
   /*MIME_IMAGE_GIF,*/
   /*MIME_IMAGE_SVG,*/
   /*MIME_IMAGE_ICON,*/
-  /*MIME_APPLICATION_JSON,*/
   /*MIME_APPLICATION_XML,*/
   /*MIME_APPLICATION_PDF,*/
   /*MIME_APPLICATION_ZIP,*/
@@ -56,8 +59,11 @@ typedef struct {
 
 typedef enum {
   HTTP_200_OK = 0,
+  HTTP_201_CREATED,
+  HTTP_400_BAD_REQUEST,
   HTTP_404_NOT_FOUND,
-  HTTP_415_UNSUPPORTED
+  HTTP_415_UNSUPPORTED,
+  HTTP_500_INTERNAL_ERROR
 } HttpStatusCode;
 
 // HttpRequest
@@ -69,6 +75,7 @@ void free_http_request(HttpRequest *hr);
 char *resolve_path(const char *path);
 
 // Headers
+void parse_header_line(const char *line, Headers *headers);
 void add_header(Headers *hs, const char *key, const char *value);
 char *get_header(Headers *hs, const char *key);
 void print_headers(Headers *hs);
@@ -77,6 +84,9 @@ void free_headers(Headers *hs);
 // StartLine
 void print_start_line(StartLine *sl);
 void free_start_line(StartLine *sl);
+
+// Body
+void print_body(cJSON *body);
 
 // MimeType
 const char *get_mime_type(MimeType type);

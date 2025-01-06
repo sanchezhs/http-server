@@ -27,6 +27,7 @@ Options:
 
 #include <errno.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 // Log levels
 #define LOG_INFO "INFO"
@@ -64,6 +65,9 @@ read_entire_file(const char *directory, const char *file_path, long *file_size);
 UTILS_DEF char *find_file_in_directory(const char *target_dir,
                                        const char *target_file);
 
+UTILS_DEF bool write_file(const char *file_path, const unsigned char *data,
+                          long data_size);
+
 #ifdef UTILS_LOG_IMPLEMENTATION
 
 #include <dirent.h>
@@ -87,6 +91,22 @@ UTILS_DEF void log_message(const char *level, const char *format, ...) {
   va_end(args);
 
   printf("\n");
+}
+
+UTILS_DEF bool write_file(const char *file_path, const unsigned char *data,
+                          long data_size) {
+  FILE *f = fopen(file_path, "wb");
+  if (!f) {
+    return false;
+  }
+
+  if (fwrite(data, 1, data_size, f) != (size_t)data_size) {
+    fclose(f);
+    return false;
+  }
+  fclose(f);
+
+  return true;
 }
 
 UTILS_DEF unsigned char *read_entire_file(const char *directory,
