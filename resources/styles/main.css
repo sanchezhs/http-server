@@ -92,7 +92,6 @@ canvas {
   display: none;
 }
 
-/* Estilo para el contenedor de autenticación */
 .auth-container {
   display: flex;
   flex-direction: column;
@@ -101,7 +100,6 @@ canvas {
   height: 100vh;
 }
 
-/* Tabs para alternar entre login y registro */
 .tabs {
   display: flex;
   justify-content: center;
@@ -124,7 +122,6 @@ canvas {
   color: #4ca3dd;
 }
 
-/* Formularios */
 .auth-form {
   background: #1e1e2f;
   padding: 20px 30px;
